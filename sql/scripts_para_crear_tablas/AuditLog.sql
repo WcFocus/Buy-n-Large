@@ -1,5 +1,3 @@
--- tabla para realiza auditoria a los usuarios del sistema
-
 CREATE TABLE AuditLog (
     -- Primary Key
     id_audit BIGINT IDENTITY(1,1) PRIMARY KEY, -- Identificador único del registro de auditoría
@@ -7,15 +5,15 @@ CREATE TABLE AuditLog (
     -- Foreign Keys
     user_id BIGINT NOT NULL,                   -- Usuario que realizó la acción
         CONSTRAINT FK_AuditLog_User 
-        FOREIGN KEY REFERENCES [User](id_user),
+        FOREIGN KEY (user_id) REFERENCES [User](id_user),
 
     entitycatalog_id BIGINT NOT NULL,          -- Entidad a la que se accedió
         CONSTRAINT FK_AuditLog_EntityCatalog 
-        FOREIGN KEY REFERENCES EntityCatalog(id_entit),
+        FOREIGN KEY (entitycatalog_id) REFERENCES EntityCatalog(id_entit),
 
     permission_id BIGINT NOT NULL,             -- Permiso utilizado para el acceso
         CONSTRAINT FK_AuditLog_Permission 
-        FOREIGN KEY REFERENCES Permission(id_permi),
+        FOREIGN KEY (permission_id) REFERENCES Permission(id_permi),
 
     -- Action Information
     action_type NVARCHAR(50) NOT NULL,        -- Tipo de acción (CREATE, READ, UPDATE, DELETE)

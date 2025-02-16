@@ -1,9 +1,60 @@
-from django.http import JsonResponse, HttpResponse
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from rest_framework import status
+from django.http import HttpResponse
 from django.db import connection
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from io import BytesIO
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
 
+@swagger_auto_schema(
+    method='get',
+    operation_description="Obtiene los permisos de un usuario sobre una entidad específica.",
+    manual_parameters=[
+        openapi.Parameter(
+            name='user_id',
+            in_=openapi.IN_PATH,
+            description="ID del usuario",
+            type=openapi.TYPE_INTEGER,
+            required=True
+        ),
+    ],
+    responses={
+        200: openapi.Response(
+            description="Lista de permisos del usuario",
+            schema=openapi.Schema(
+                type=openapi.TYPE_ARRAY,
+                items=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        'user_name': openapi.Schema(type=openapi.TYPE_STRING),
+                        'permission_name': openapi.Schema(type=openapi.TYPE_STRING),
+                        'Pdescription': openapi.Schema(type=openapi.TYPE_STRING),
+                        'tabla_permisos': openapi.Schema(type=openapi.TYPE_STRING),
+                        'can_create': openapi.Schema(type=openapi.TYPE_BOOLEAN),
+                        'can_read': openapi.Schema(type=openapi.TYPE_BOOLEAN),
+                        'can_update': openapi.Schema(type=openapi.TYPE_BOOLEAN),
+                        'can_delete': openapi.Schema(type=openapi.TYPE_BOOLEAN),
+                        'can_import': openapi.Schema(type=openapi.TYPE_BOOLEAN),
+                        'can_export': openapi.Schema(type=openapi.TYPE_BOOLEAN),
+                    }
+                )
+            )
+        ),
+        500: openapi.Response(
+            description="Error interno del servidor",
+            schema=openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    'error': openapi.Schema(type=openapi.TYPE_STRING),
+                }
+            )
+        ),
+    }
+)
+@api_view(['GET'])
 def get_employee_permissions(request, user_id):
     """
     Obtiene los permisos de un usuario sobre una entidad específica.
@@ -33,11 +84,49 @@ def get_employee_permissions(request, user_id):
                 'can_export': row[9],
             })
         
-        return JsonResponse(permissions, safe=False)
+        return Response(permissions, status=status.HTTP_200_OK)
 
     except Exception as e:
-        return JsonResponse({'error': str(e)}, status=500)
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+@swagger_auto_schema(
+    method='get',
+    operation_description="Genera y descarga un reporte de nómina en formato PDF para un empleado específico.",
+    manual_parameters=[
+        openapi.Parameter(
+            name='empleado_id',
+            in_=openapi.IN_PATH,
+            description="ID del empleado",
+            type=openapi.TYPE_INTEGER,
+            required=True
+        ),
+    ],
+    responses={
+        200: openapi.Response(
+            description="PDF generado",
+            content={'application/pdf': {}}
+        ),
+        404: openapi.Response(
+            description="No se encontraron datos de nómina para el empleado.",
+            schema=openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    'error': openapi.Schema(type=openapi.TYPE_STRING),
+                }
+            )
+        ),
+        500: openapi.Response(
+            description="Error interno del servidor",
+            schema=openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    'error': openapi.Schema(type=openapi.TYPE_STRING),
+                }
+            )
+        ),
+    }
+)
+@api_view(['GET'])
 def download_payroll_report(request, empleado_id):
     """
     Genera y descarga un reporte de nómina en formato PDF para un empleado específico.
@@ -52,7 +141,7 @@ def download_payroll_report(request, empleado_id):
 
         # Verificar si se encontraron resultados
         if not results:
-            return JsonResponse({'error': 'No se encontraron datos de nómina para el empleado.'}, status=404)
+            return Response({'error': 'No se encontraron datos de nómina para el empleado.'}, status=status.HTTP_404_NOT_FOUND)
 
         # Crear un buffer para almacenar el PDF
         buffer = BytesIO()
@@ -89,7 +178,7 @@ def download_payroll_report(request, empleado_id):
         return response
 
     except Exception as e:
-        return JsonResponse({'error': str(e)}, status=500)
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 def home(request):
     """
