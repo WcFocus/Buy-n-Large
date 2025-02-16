@@ -3,9 +3,10 @@ from . import views
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 urlpatterns = [
-    # Endpoints de la API
-    path('employees/<int:user_id>/', views.get_employee_permissions, name='get_employee_permissions'),
-    path('payroll-report/<int:empleado_id>/', views.download_payroll_report, name='download_payroll_report'),  # Nueva ruta para el reporte de nómina
+    # Cambia 'employees' por 'GetUserPermissionsOnEntity'
+    path('GetUserPermissionsOnEntity/<int:user_id>/', views.get_employee_permissions, name='get_user_permissions_on_entity'),
+    path('payroll-report/<int:empleado_id>/', views.download_payroll_report, name='download_payroll_report'),
+    path('', views.home, name='home'),
 
     # Endpoints de autenticación JWT
     path('token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
